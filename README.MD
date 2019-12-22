@@ -14,6 +14,7 @@ The architecture of the client:
 3. jsonrpc interface (built on ocaml websocket / js websocket interface)
 
 Currently this repo is still under development. The following is a brief progress report.
+
 [  ] Exposed API: (calls the client dsl executor and runs the dsl script).
 Once the framework is done. We can easily change algorithms by changing the underlying scripts.
 
@@ -120,3 +121,9 @@ suter_cli > ./wsclient.native -url http://127.0.0.1:9944
 > @send param |> state_getRuntimeVersion
 > (* Response displayed here *)
 ```
+
+# License:
+
+This project is licensed under the Apache License.
+
+
