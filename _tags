@@ -1,2 +1,4 @@
-true: package(websocket), package(lwt), package(lwt_log), package(conduit-lwt-unix), package(cohttp-lwt-unix), package(lwt_ppx), package(hex)
-true: package(yojson)
+true: package(websocket, lwt, lwt_log, conduit-lwt-unix, cohttp-lwt-unix, lwt_ppx, hex, digestif.ocaml)
+true: package(yojson, camlp5, camlp5.gramlib)
+<dsl.*>: compile_extend
+<*.native>: compile_extend

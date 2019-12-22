@@ -1,6 +1,7 @@
 open Lwt.Infix
 open Websocket
 open Command
+open Response
 
 let section = Lwt_log.Section.make "wsclient"
 
@@ -133,20 +134,16 @@ let setup_connection uri =
  * Execute command through an extablished
  * websocket (sender, recv) pair.
  * 
- * The handler must be a pure function.
  *
  *)
-let execute_command send recv cmd handler
+let execute_command send recv cmd
   : 'a option Lwt.t =
   let react = standard_react send (fun content->
-      let%lwt _ = Lwt_io.printf "> %s\n> %!" content in
+      let%lwt _ = Lwt_io.printf "> %s\n" content in
       let%lwt result = Lwt.return @@ ResponseDecoder.get_response content in
-      let%lwt _ = Lwt_io.printf "> Decoding:\n" in
-      let%lwt _ = Lwt_io.printf "> Decoded Response:\n %s\n> %!" result
-      in
-      handler result
+      Lwt.return (Some result)
   ) in
-  let content = JSONCommand.to_string cmd in
+  let content = Command.to_string cmd in
   Lwt_io.printf "> Sending\n %s\n" content >>= fun () ->
   send @@ Frame.create ~content () >>= fun () ->
   recv () >>= fun fr -> react fr

@@ -1,4 +1,4 @@
-wsclient.native: wsclient.ml command.ml connection.ml
+wsclient.native: wsclient.ml command.ml connection.ml dsl.ml rt.ml response.ml hash.ml
 	ocamlbuild -tags thread -use-ocamlfind wsclient.native
 
 clean:
