@@ -1,17 +1,27 @@
-The architecture of the client
+Suter_cli is the client of suterusu chain, there are three main components of
+suter_cli:
+- The connection component
+- A domain specific lanugae(DSL)
+- A runtime executor
+
+
+The architecture of the client:
 
 1. Client exposed js API or Client exposed ocaml API (js api is translated from ocaml by ocaml_to_js)
-
 2. script files written in client dsl + dsl runtime
-
 3. jsonrpc interface (built on ocaml websocket / js websocket interface)
 
 [ ] exposed API. (calls the client dsl executor and runs the dsl script).
 Once the framework is done. We can easily change algorithms by changing the underlying scripts.
- 
 [X] Client DSL (under development).
-
 [X] Runtime (under development)
+
+
+How to compile suter_cli?
+$ Install opam 2.0.5
+$ ./configure.sh
+
+Component details:
 
 1. The connection component:
 
@@ -68,3 +78,4 @@ transfer.sbl
 """
 
 3. A runtime executor that can execute and debug the client dsl scripts. 
+
