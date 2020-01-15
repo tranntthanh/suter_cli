@@ -24,6 +24,7 @@ module Hash64 = XXHash.XXH64
 type hash_type =
   | BLAKE256 (* The standard blake2b 32 *)
   | TWOX128 (* concate two xx hash into one *)
+  | TWOX64 (* concate two xx hash into one *)
 
 module BLAKE256 = Make_BLAKE2B (struct let digest_size = 32 end)
 
@@ -59,8 +60,9 @@ let build_hash_for_arg hash node =
           Arg.STR ("0x" ^ (BLAKE256.to_hex h))
       | TWOX128 ->
           Arg.STR ("0x" ^ (hash128 str))
+      | TWOX64 ->
+          Arg.STR ("0x" ^ (hash64 str))
     end
   | _ -> raise (CommandError
         "can not hash non-string node")
-
 

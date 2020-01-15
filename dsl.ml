@@ -61,6 +61,7 @@ EXTEND
     hash_type: [
         [ "blake256" -> BLAKE256] 
       | [ "twox128" -> TWOX128]
+      | [ "twox64" -> TWOX64]
     ];
 
     cmd_exp: [
