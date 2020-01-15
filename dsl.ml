@@ -28,12 +28,14 @@ let to_cname t: cname = t
 
 type vname = string
 type tname = string
+
 type ast =
   | NOP
   | LVAR of Arg.t
   | CHECK of tname * vname
   | DISPLAY of tname
   | SEND of tname * Arg.t
+  | CALL of cname * (Arg.t list)
 
 let to_tname t: tname = t
 let to_vname t: vname = t
@@ -84,6 +86,12 @@ EXTEND
     | [ "@"; "send"; node=arg_exp; "|>";
           tname=tname_exp ->
             SEND (tname, node) ]
+    | [ "@"; "send"; node=arg_exp; "|>";
+          tname=tname_exp ->
+            SEND (tname, node) ]
+    | [ "@"; "call"; fname=cname_exp;
+          args = LIST0 arg_exp SEP " " ->
+            CALL (fname, args) ]
     ];
 
     tname_exp: [[ n = LIDENT -> to_tname n]];

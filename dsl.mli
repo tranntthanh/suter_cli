@@ -26,6 +26,7 @@ type ast =
   | CHECK of tname * vname
   | DISPLAY of tname
   | SEND of tname * Arg.t
+  | CALL of cname * (Arg.t list)
 
 val parse_arg : char Stream.t -> vname option * ast
 

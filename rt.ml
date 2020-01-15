@@ -21,6 +21,9 @@ open Command
 open Dsl
 open Console
 
+
+let load_fun fname args = Lwt.return @@ fun _ -> Lwt.return None
+
 module ExecuteClosure = struct
     type map = Arg.t JSONClosure.t
 
@@ -57,7 +60,7 @@ module ExecuteClosure = struct
         let cmd = compose !closure db tname arg "0" in
         io_printf "> %s\n> " (Command.to_string cmd) >>= fun _ ->
         Lwt.return None
-      | SEND (tname, arg) -> 
+      | SEND (tname, arg) -> begin
         let%lwt cmd = Lwt.return @@ compose !closure db tname arg "1" in
         let%lwt result = remote_call cmd in
         match result with
@@ -68,6 +71,15 @@ module ExecuteClosure = struct
         | None ->
             io_printf "> Command Error, No Response\n> " >>= fun _ ->
             Lwt.return None
+        end
+      | CALL (fname, args) -> begin
+            (*
+             * every fun has an hash map to map args into (key,arg) map
+             * and execute the fun with this map
+             *)
+            let%lwt f = load_fun fname args in
+            f ()
+        end
       in match lvar, lname with
       | Some v, Some n -> set_var n v; Lwt.return ()
       | _ , _ -> Lwt.return ()
