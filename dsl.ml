@@ -18,6 +18,7 @@ open Stream
 open Command
 open Lwt.Infix
 open Hash
+open Crypto
 open Digestif
 
 exception DSLError of string
@@ -53,6 +54,9 @@ EXTEND
       | [ var = cname_exp -> Arg.VAR var ]
       | [ "["; args = LIST0 arg_exp SEP ","; "]"
         -> Arg.ARGS args ]
+      | [ "@"; "crypto"; crypto=crypto_type; method=crypto_method;
+            arg=arg_exp ->
+          build_crypto_for_args hash node ]
       | [ "@"; "hash"; hash=hash_type; node=arg_exp ->
           build_hash_for_arg hash node ]
     ];
@@ -65,7 +69,13 @@ EXTEND
       | [ "twox128" -> TWOX128]
       | [ "twox64" -> TWOX64]
     ];
-
+    crypto_type: [
+        [ "ed25519" -> ED25519] 
+    ];
+    crypto_type: [
+        [ "sign" -> SIGN] 
+      | [ "pk" -> PUBLIC_KEY] 
+    ];
     cmd_exp: [
       [ lvl =vname_exp; ":="; rvl=cmd_rvalue->
             (Some (to_vname lvl), rvl) ]

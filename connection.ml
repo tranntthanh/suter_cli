@@ -149,10 +149,8 @@ let setup_connection uri =
 (*
  * Execute command through an extablished
  * websocket (sender, recv) pair.
- * 
- *
  *)
-let execute_command send recv cmd
+let do_ipc send recv cmd
   : 'a option Lwt.t =
   let react = standard_react send (fun content->
       let%lwt _ = Lwt_io.printf "> %s\n" content in
