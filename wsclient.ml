@@ -38,7 +38,6 @@ let zkp_client uri =
 
   let%lwt recv, send = setup_connection uri in
   let%lwt db = init_command_db send recv in
-
   Rt.execute_script_stream stdin (recv,send) db JSONClosure.empty
 
 let apply_loglevel = function

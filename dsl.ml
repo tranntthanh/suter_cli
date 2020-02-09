@@ -52,13 +52,13 @@ EXTEND
       | [ str = STRING -> Arg.STR str ]
       | [ int = INT -> Arg.INT (int_of_string int) ]
       | [ var = cname_exp -> Arg.VAR var ]
-      | [ "["; args = LIST0 arg_exp SEP ","; "]"
-        -> Arg.ARGS args ]
-      | [ "@"; "crypto"; crypto=crypto_type; method=crypto_method;
-            arg=arg_exp ->
-          build_crypto_for_args hash node ]
-      | [ "@"; "hash"; hash=hash_type; node=arg_exp ->
-          build_hash_for_arg hash node ]
+      | [ "["; args = LIST0 arg_exp SEP ","; "]" -> Arg.ARGS args ]
+      | [ "@"; "crypto"; crypto=crypto_type;
+          m = crypto_method;
+          arg=arg_exp ->
+          build_crypto_for_args crypto m arg]
+      | [ "@"; "hash"; hash=hash_type; arg=arg_exp ->
+          build_hash_for_arg hash arg]
     ];
     key_value_exp: [
         [ name=cname_exp; ":"; exp=arg_exp
@@ -72,7 +72,7 @@ EXTEND
     crypto_type: [
         [ "ed25519" -> ED25519] 
     ];
-    crypto_type: [
+    crypto_method: [
         [ "sign" -> SIGN] 
       | [ "pk" -> PUBLIC_KEY] 
     ];

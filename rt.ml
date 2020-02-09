@@ -103,7 +103,7 @@ let execute_script_stream stream (recv, send) db cls =
             let%lwt _ = try
                 let lvl, cmd = parse_arg @@ Stream.of_string cmd in
                 let remote_call = do_ipc send recv in
-                Rt.ExecuteClosure.run db lvl cmd remote_call
+                ExecuteClosure.run db lvl cmd remote_call
             with 
             | Ploc.Exc (loc, e) ->
                 io_printf "> Syntax Error: start %d, end %d\n> "

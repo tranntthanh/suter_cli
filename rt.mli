@@ -28,3 +28,11 @@ val run : ArgType.t CommandDB.TypeDb.t
     -> JSONClosure.key option -> ast -> Arg.t remote_call
     -> unit Lwt.t
 end
+
+val execute_script_stream : in_channel
+    -> ((unit -> Websocket.Frame.t Lwt.t) * (Websocket.Frame.t -> unit Lwt.t))
+    -> (ArgType.t CommandDB.TypeDb.t) option
+    -> Command.t JSONClosure.t
+    -> unit Lwt.t
+
+
