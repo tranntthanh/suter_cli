@@ -32,13 +32,16 @@ let init_command_db send recv : 'a option Lwt.t=
   (* TODO construct the formal db here *)
   Lwt.return @@ Some (dft_cdb db)
 
-let zkp_client uri =
+let zkp_client uri cmd_file =
 
   let open Command in
 
   let%lwt recv, send = setup_connection uri in
   let%lwt db = init_command_db send recv in
-  Rt.execute_script_stream stdin (recv,send) db JSONClosure.empty
+  let%lwt in_channel = match cmd_file with
+    | Some f -> Lwt_io.open_file Lwt_io.input f
+    | _ -> Lwt.return Lwt_io.stdin in
+  Rt.execute_script_stream in_channel (recv,send) db JSONClosure.empty
 
 let apply_loglevel = function
 | 2 -> Lwt_log.(add_rule "*" Info)
@@ -46,16 +49,17 @@ let apply_loglevel = function
 | _ -> ()
 
 let () =
-  let reset = ref false in
   let uri = ref "" in
   let cmd = ref "" in
+  let file = ref None in
   let set_uri s = uri := s in
+  let set_file f = file := Some f in
   let fetch_cmd s = cmd := s in
   let spec_args = Arg.align [
       "-loglevel", Arg.Int apply_loglevel, "1-3 Set loglevel";
-      "-r", Arg.Set reset, " ZKP reset sign process";
       "-url", Arg.String set_uri, " ZKP reset sign process";
+      "-f", Arg.String set_file, " ZKP reset sign process";
     ] in
   let usage_msg = "Usage: " ^ Sys.argv.(0) ^ " <options> uri\nOptions are:" in
   Arg.parse spec_args fetch_cmd usage_msg;
-  Lwt_main.run (zkp_client (Uri.of_string !uri))
+  Lwt_main.run (zkp_client (Uri.of_string !uri) !file)

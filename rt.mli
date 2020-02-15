@@ -29,7 +29,7 @@ val run : ArgType.t CommandDB.TypeDb.t
     -> unit Lwt.t
 end
 
-val execute_script_stream : in_channel
+val execute_script_stream : Lwt_io.input_channel
     -> ((unit -> Websocket.Frame.t Lwt.t) * (Websocket.Frame.t -> unit Lwt.t))
     -> (ArgType.t CommandDB.TypeDb.t) option
     -> Command.t JSONClosure.t
