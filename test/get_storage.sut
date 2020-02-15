@@ -1,0 +1,3 @@
+param := [@hash twox128 "Balances TotalIssuance"]
+@display param
+@send param |> state_getStorage

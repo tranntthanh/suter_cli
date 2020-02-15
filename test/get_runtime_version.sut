@@ -1,0 +1,2 @@
+param := []
+@send param |> state_getRuntimeVersion
