@@ -1,5 +1,3 @@
-open Element
-
 (* The Basic Blocks we would like to translate *)
 module type Block = sig
   type elt
@@ -16,6 +14,17 @@ module type Translator = sig
   val translate: 'a -> 'b
 end
 
+module type Statement = sig
+  module Exp : Element.Exp
+  type 'a t
+  val mkAssign: 'a Exp.t -> 'a Exp.t -> 'a t 
+  val mkLoad: 'a Exp.t -> 'a Exp.t -> 'a t 
+  val mkComment: string -> 'a t
+  val mkFallThrough: unit -> 'a t
+  val mkDangling: unit -> 'a t
+  val emit: Emitter.t -> 'a t -> unit
+end
+
 module Make:
   functor (BasicBlock:Block) -> sig
   module BlockClosure: Block
@@ -23,8 +32,15 @@ module Make:
   module BlockSet: (Set.S with type elt = BasicBlock.t)
   
   type error
+  type 'a merge_point =
+    | Merge of 'a
+    | Diverge of 'a list
+    | Dangle
 
   val aggregate: BasicBlock.t -> BlockSet.t -> bool -> BlockClosure.t
+
+  val get_merge_point: BlockClosure.t -> BlockClosure.t
+    -> BlockClosure.t merge_point
 
   (* trace function: current closure -> previous_statement -> entry_aggro
     -> merge_aggro -> target block *)

@@ -1,4 +1,4 @@
 (test
  (name test)
- (libraries cfg)
+ (libraries codeflow)
 )

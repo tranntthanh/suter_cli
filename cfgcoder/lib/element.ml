@@ -42,25 +42,12 @@ module MakeExp : Exp = struct
 
 end
 
-module type Statement = sig
-  module Exp: Exp
-  type 'a t
-  val mkAssign: 'a -> 'a -> 'a t 
-  val mkLoad: 'a -> 'a -> 'a t 
-  val mkMutInd: ('a Exp.t * 'a t) list -> 'a t 
-  val mkLoop: ('a Exp.t) list -> 'a t -> 'a t
-  val mkFallThrough: unit -> 'a t
-  val mkDangling: unit -> 'a t
-  val mkRaise: int -> 'a t
-  val bind: ('a Exp.t) option -> 'a t -> 'a t -> 'a t
-  val emit: char Stream.t -> 'a t -> unit
-end
-
-module MakeStatement (E:Exp) :Statement = struct
+module MakeStatement (E:Exp) = struct
   module Exp = E
   type 'a t =
-    | Assign of ('a * 'a)
-    | Load of ('a * 'a)
+    | Comment of string
+    | Assign of ('a Exp.t * 'a Exp.t)
+    | Load of ('a Exp.t * 'a Exp.t)
     | MutInd of ('a Exp.t * 'a t) list
     | Loop of (('a Exp.t) list * 'a t)
     | Bind of (('a Exp.t) option * 'a t * 'a t)
@@ -75,6 +62,28 @@ module MakeStatement (E:Exp) :Statement = struct
   let mkFallThrough _ = FallThrough
   let mkDangling _ = Dangling
   let mkRaise i = Raise i
-  let bind v arg app = Bind (v, arg, app)
-  let emit _ _ = ()
+  let mkComment c = Comment c 
+  let bind v arg app = match arg with
+     | FallThrough -> app
+     | _ -> Bind (v, arg, app)
+  let rec emit emitter s = match s with
+    | Comment s -> Emitter.emitLine emitter "%s" s
+    | Bind (_, s1, s2) -> emit emitter s1; emit emitter s2
+    | MutInd ls ->
+      Emitter.emitLine emitter "let _ = cases";
+      let emitter = Emitter.indent emitter in
+      ignore @@ List.map (fun (_,s) -> emit emitter s) ls;
+      Emitter.emitLine emitter "in"
+    | Loop (_, s) -> begin
+      let emitter = Emitter.indent emitter in
+      emit emitter s;
+      end
+    | Raise c -> Emitter.emitLine emitter "raise %d" c
+    | FallThrough -> Emitter.emitLine emitter "fallthrough"
+    | Dangling -> Emitter.emitLine emitter "dangling"
+    | Load (x, y) -> Emitter.emitLine emitter "%s <- load %s;"
+        (Exp.to_string x) (Exp.to_string y) 
+    | Assign (x, y) -> Emitter.emitLine emitter "%s <- ret %s;"
+        (Exp.to_string x) (Exp.to_string y) 
+
 end

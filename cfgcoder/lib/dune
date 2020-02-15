@@ -1,4 +1,4 @@
 (library
- (public_name cfg)
- (name cfg)
+ (public_name codeflow)
+ (name codeflow)
  (modules element cfg emitter))
