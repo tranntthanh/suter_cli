@@ -54,9 +54,8 @@ EXTEND
       | [ var = cname_exp -> Arg.VAR var ]
       | [ "["; args = LIST0 arg_exp SEP ","; "]" -> Arg.ARGS args ]
       | [ "@"; "crypto"; crypto=crypto_type;
-          m = crypto_method;
           arg=arg_exp ->
-          build_crypto_for_args crypto m arg]
+          build_crypto_for_args crypto PUBLIC_KEY arg]
       | [ "@"; "hash"; hash=hash_type; arg=arg_exp ->
           build_hash_for_arg hash arg]
     ];
@@ -65,16 +64,16 @@ EXTEND
         -> (name, exp)]
     ];
     hash_type: [
-        [ "blake256" -> BLAKE256] 
+        [ "blake256" -> BLAKE256]
       | [ "twox128" -> TWOX128]
       | [ "twox64" -> TWOX64]
     ];
     crypto_type: [
-        [ "ed25519" -> ED25519] 
+        [ "ed25519" -> ED25519]
     ];
     crypto_method: [
-        [ "sign" -> SIGN] 
-      | [ "pk" -> PUBLIC_KEY] 
+        [ "sign" -> SIGN]
+      | [ "pk" -> PUBLIC_KEY]
     ];
     cmd_exp: [
       [ lvl =vname_exp; ":="; rvl=cmd_rvalue->
