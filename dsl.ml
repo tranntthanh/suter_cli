@@ -34,6 +34,8 @@ type ast =
   | NOP
   | LVAR of Arg.t
   | CHECK of tname * vname
+  | HASH of (hash_type * Arg.t)
+  | CRYPTO of (crypto_type * Arg.t)
   | DISPLAY of tname
   | SEND of tname * Arg.t
   | CALL of cname * (Arg.t list)
@@ -50,14 +52,10 @@ EXTEND
         [ "{"; attrs = LIST1 key_value_exp SEP ","; "}"
         -> Arg.ATTR attrs ]
       | [ str = STRING -> Arg.STR str ]
+      | [ "`"; char = INT -> Arg.CHAR (Char.chr (int_of_string char)) ]
       | [ int = INT -> Arg.INT (int_of_string int) ]
       | [ var = cname_exp -> Arg.VAR var ]
       | [ "["; args = LIST0 arg_exp SEP ","; "]" -> Arg.ARGS args ]
-      | [ "@"; "crypto"; crypto=crypto_type;
-          arg=arg_exp ->
-          build_crypto_for_args crypto PUBLIC_KEY arg]
-      | [ "@"; "hash"; hash=hash_type; arg=arg_exp ->
-          build_hash_for_arg hash arg]
     ];
     key_value_exp: [
         [ name=cname_exp; ":"; exp=arg_exp
@@ -90,6 +88,10 @@ EXTEND
           vname=vname_exp; ":";
           tname=tname_exp ->
             CHECK (tname, vname)]
+    | [ "@"; "crypto"; crypto=crypto_type;
+          arg=arg_exp -> CRYPTO (crypto, arg) ]
+    | [ "@"; "hash"; hash=hash_type;
+          arg=arg_exp -> HASH (hash, arg) ]
     | [ "@"; "display"; tname=tname_exp ->
             DISPLAY tname]
     | [ "@"; "send"; node=arg_exp; "|>";

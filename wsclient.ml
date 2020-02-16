@@ -23,11 +23,11 @@ open Console
 
 let init_command_db send recv : 'a option Lwt.t=
   let open Command in
-  let m = "state_getMetadata" in
-  let cmd = compose_unsafe m None 1 in
+  (* let m = "state_getMetadata" in *)
+  (* let cmd = compose_unsafe m None 1 in *)
 
   let db = CommandDB.TypeDb.empty in
-  let%lwt result = do_ipc send recv cmd in
+  (* let%lwt result = do_ipc send recv cmd in *)
   let%lwt _ = io_printf "> entering script mode:\n> " in
   (* TODO construct the formal db here *)
   Lwt.return @@ Some (dft_cdb db)

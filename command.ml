@@ -19,8 +19,8 @@ module JSONClosure = Map.Make(String)
 module TypesDb = Map.Make(String)
 
 (* The error type *)
-exception CommandError of string 
-exception DecodeArgError of string 
+exception CommandError of string
+exception DecodeArgError of string
 
 type cname = string
 
@@ -28,6 +28,7 @@ module Arg = struct
 
   type t =
     | STR of string
+    | CHAR of char
     | INT of int
     | BOOL of bool
     | VAR of string
@@ -39,6 +40,7 @@ module Arg = struct
   | INT i -> Int.to_string i
   | BOOL b -> if b then "true" else "false"
   | VAR s -> s
+  | CHAR c -> "`" ^ Int.to_string (Char.code c)
   | ARGS args -> begin
       match args with
       | [] -> "[]"
@@ -57,6 +59,19 @@ module Arg = struct
           ) (tos hd) ls in
           "[ " ^ c ^ " ]"
     end
+
+  let map f t = match t with
+  | ARGS args -> ARGS (List.map f args)
+  | ATTR attrs -> ATTR (List.map (fun (c, t) -> (c, f t)) attrs)
+  | c -> f c
+
+  let flat_node env t =
+    let rec flat t = match t with
+    | ATTR attrs -> map flat t
+    | ARGS args -> map flat t
+    | VAR vname -> flat @@ JSONClosure.find vname env
+    | c -> c
+    in flat t
 
   let rec of_json (t:Yojson.Basic.t) = match t with
   | `String s -> STR s
@@ -143,6 +158,7 @@ module Command = struct
       | VAR vname -> type_check typ @@ JSONClosure.find vname env
       | _ -> type_check typ arg
 
+
 end
 
 
@@ -163,7 +179,7 @@ module CommandDB = struct
    *)
   let compile db cmdjson = cmdjson
 
-  let query_command env db cname args = 
+  let query_command env db cname args =
     let cmd_type = try
         TypeDb.find cname db
     with Not_found ->
@@ -178,7 +194,7 @@ module CommandDB = struct
   let create t = t
 end
 
-let compose env db method_name arg cid = 
+let compose env db method_name arg cid =
   let open CommandDB in
   let open Command in
   try

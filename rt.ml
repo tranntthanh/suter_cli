@@ -20,6 +20,8 @@ open Connection
 open Command
 open Dsl
 open Console
+open Hash
+open Crypto
 
 
 let load_fun fname args = Lwt.return @@ fun _ -> Lwt.return None
@@ -32,7 +34,11 @@ module ExecuteClosure = struct
   let closure = ref JSONClosure.empty
 
   let set_var vname var =
-    closure := JSONClosure.add vname var !closure
+    let var = Arg.flat_node !closure var in
+    if JSONClosure.mem vname !closure then
+      raise @@ CommandError (vname ^ " is not mutable")
+    else
+      closure := JSONClosure.add vname var !closure
 
   let display_all_vars =
     ignore @@ JSONClosure.mapi (fun n arg ->
@@ -41,7 +47,7 @@ module ExecuteClosure = struct
 
   (*
    * Execute the command ast
-   * The remote_exec is usually 
+   * The remote_exec is usually
    * provied by a wsclient to
    * invoke a remote call.
    *)
@@ -49,27 +55,32 @@ module ExecuteClosure = struct
     let%lwt lvar = match cmd with
     | NOP -> display_all_vars; Lwt.return None
     | LVAR arg ->
-      io_printf ">" >>= fun _ ->
       Lwt.return @@ Some arg
+    | HASH (hash, arg) ->
+      let arg = Arg.flat_node !closure arg in
+      Lwt.return @@ Some (build_hash_for_arg hash arg)
+    | CRYPTO (crypto, arg) ->
+      let arg = Arg.flat_node !closure arg in
+      Lwt.return @@ Some (build_crypto_for_args crypto PUBLIC_KEY arg)
     | DISPLAY n ->
       let v = JSONClosure.find n !closure in
-      io_printf "> %s = %s\n>" n (Arg.to_string v) >>= fun _ ->
+      io_printf "> %s = %s\n" n (Arg.to_string v) >>= fun _ ->
       Lwt.return None
     | CHECK (tname, vname) ->
       let arg = Arg.VAR vname in
       let cmd = compose !closure db tname arg "0" in
-      io_printf "> %s\n> " (Command.to_string cmd) >>= fun _ ->
+      io_printf "> %s\n" (Command.to_string cmd) >>= fun _ ->
       Lwt.return None
     | SEND (tname, arg) -> begin
       let%lwt cmd = Lwt.return @@ compose !closure db tname arg "1" in
       let%lwt result = remote_call cmd in
       match result with
       | Some r ->
-          io_printf "> Response: %s\n> " 
+          io_printf "> Response: %s\n"
               (Arg.to_string r) >>= fun _ ->
           Lwt.return (Some r)
       | None ->
-          io_printf "> Command Error, No Response\n> " >>= fun _ ->
+          io_printf "> Command Error, No Response\n" >>= fun _ ->
           Lwt.return None
       end
     | CALL (fname, args) -> begin
@@ -80,7 +91,9 @@ module ExecuteClosure = struct
           let%lwt f = load_fun fname args in
           f ()
       end
-    in match lvar, lname with
+    in
+    io_printf "> " >>= fun _ ->
+    match lvar, lname with
     | Some v, Some n -> set_var n v; Lwt.return ()
     | _ , _ -> Lwt.return ()
 end
@@ -93,23 +106,26 @@ let execute_script_stream stream (recv, send) db cls =
         send @@ Frame.close 1000
       end
     | Some db -> begin
-        Lwt_io.(read_line_opt stdin) >>= function
+        Lwt_io.(read_line_opt stream) >>= function
         | None -> begin
             let%lwt _ = Lwt_log.debug ~section
 	        "Got EOF. Sending a close frame." in
             send @@ Frame.close 1000
           end
         | Some cmd -> begin
+            let%lwt _ = Lwt_log.debug ~section (cmd ^ "\n") in
             let%lwt _ = try
                 let lvl, cmd = parse_arg @@ Stream.of_string cmd in
                 let remote_call = do_ipc send recv in
                 ExecuteClosure.run db lvl cmd remote_call
-            with 
+            with
             | Ploc.Exc (loc, e) ->
-                io_printf "> Syntax Error: start %d, end %d\n> "
-                    (Ploc.first_pos loc) (Ploc.last_pos loc)
+                let msg = Printexc.to_string e in
+                ignore @@ io_printf "> Error: start %d, end %d\n> "
+                    (Ploc.first_pos loc) (Ploc.last_pos loc);
+                io_printf "Details %s\n> " msg
             | TypingError (t,a) ->
-                io_printf "> Command Typing Error: %s is expected to have type %s"
+                io_printf "> Command Typing Error: %s is expected to have type %s\n> "
                 (Arg.to_string a) (ArgType.to_string t)
             in
             react_forever env

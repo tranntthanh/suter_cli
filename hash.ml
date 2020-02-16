@@ -51,18 +51,23 @@ let hash128 str =
     (* Little end *)
     s1 ^ s2
 
-let build_hash_for_arg hash node =
-  match node with
-  | Arg.STR str -> begin
-      match hash with
-      | BLAKE256 ->
-          let h = BLAKE256.digest_string str in
-          Arg.STR ("0x" ^ (BLAKE256.to_hex h))
-      | TWOX128 ->
-          Arg.STR ("0x" ^ (hash128 str))
-      | TWOX64 ->
-          Arg.STR ("0x" ^ (hash64 str))
-    end
-  | _ -> raise (CommandError
-        "can not hash non-string node")
+let build_hash_for_str hash str =
+  match hash with
+  | BLAKE256 ->
+      let h = BLAKE256.digest_string str in
+      Arg.STR ("0x" ^ (BLAKE256.to_hex h))
+  | TWOX128 ->
+      Arg.STR ("0x" ^ (hash128 str))
+  | TWOX64 ->
+      Arg.STR ("0x" ^ (hash64 str))
 
+let rec flat_str node =
+  match node with
+  | Arg.STR str -> str
+  | Arg.CHAR c -> Bytes.to_string @@ Bytes.init 1 (fun n -> c)
+  | Arg.ARGS ls -> List.fold_left (fun acc c -> acc ^ flat_str c) "" ls
+  | c -> raise (CommandError ("can not flat " ^ Arg.to_string c ^ " into string"))
+
+let build_hash_for_arg hash node =
+  let hash_str = flat_str node in
+  build_hash_for_str hash hash_str
