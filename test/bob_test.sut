@@ -1,0 +1,12 @@
+bob_id := [`142, `175, `4, `21, `22, `135, `115, `99, `38, `201, `254, `161, `126, `37, `252, `82, `135, `97, `54, `147, `201, `18, `144, `156, `178, `38, `170, `71, `148, `242, `106, `72]
+account_nonce := "System AccountNonce"
+account_nonce_param := [account_nonce, bob_id]
+account_nonce_hash := @hash blake256 account_nonce_param
+account_nonce_msg := [account_nonce_hash]
+
+account_balance := "Balances FreeBalance"
+account_balance_param := [account_balance, bob_id]
+account_balance_hash := @hash blake256 account_balance_param
+account_balance_msg := [account_balance_hash]
+@display account_balance_msg
+@send account_balance_msg |> state_getStorage
