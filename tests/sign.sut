@@ -1,0 +1,15 @@
+seed := "5bacce7f308254f466449ae86a138a9f6c3b78f459c302ada879f6a05648e33c"
+account_id := @crypto ed25519 seed
+blockhash := @send [0] |> chain_getBlockHash
+@display blockhash
+
+payload := @hash plain [[`41, `1, `7, `2, `168, `0, `0, `0, `4, `0, `0, `0], blockhash]
+signature := @sign ed25519 payload |> seed
+encode := @hash blake256 signature
+param_raw := @hash plain ["0x", "a10183ff", account_id, signature, "0000000702a8"]
+@display param_raw
+
+command := [param_raw]
+@send command |> author_submitAndWatchExtrinsic
+
+

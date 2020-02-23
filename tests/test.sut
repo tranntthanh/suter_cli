@@ -1,0 +1,4 @@
+h := @hash twox128 "Token MyValue"
+param := [h]
+@display param
+@send param |> state_getStorage

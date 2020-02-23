@@ -1,0 +1,4 @@
+h := @hash twox128 "Token BalanceProof"
+param := [h]
+@display param
+@send param |> state_getStorage

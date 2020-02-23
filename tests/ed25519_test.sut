@@ -1,0 +1,4 @@
+x := @crypto ed25519 "5bacce7f308254f466449ae86a138a9f6c3b78f459c302ada879f6a05648e33c"
+y := @crypto ed25519 "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"
+@display x
+@display y

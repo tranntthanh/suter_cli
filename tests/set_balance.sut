@@ -1,0 +1,8 @@
+test_public := @crypto ed25519 "5bacce7f308254f466449ae86a138a9f6c3b78f459c302ada879f6a05648e33c"
+test_sign := @crypto ed25519 "5bacce7f308254f466449ae86a138a9f6c3b78f459c302ada879f6a05648e33c"
+
+msg := ["Sudo sudo", [`5,`1], bob_id]
+
+msg_hash := @hash blake256 msg
+@display msg_hash
+@send msg_hash |> author_submitAndWatchExtrinsic
