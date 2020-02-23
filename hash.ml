@@ -23,14 +23,15 @@ module Hash64 = XXHash.XXH64
 
 type hash_type =
   | BLAKE256 (* The standard blake2b 32 *)
+  | TWOX64 (* xx hash *)
   | TWOX128 (* concate two xx hash into one *)
-  | TWOX64 (* concate two xx hash into one *)
+  | PLAIN (* plat the json into a plain hex *)
 
 module BLAKE256 = Make_BLAKE2B (struct let digest_size = 32 end)
 
 let int64_to_bytes hash =
     let w n i =
-        let x = Int64.shift_right_logical i (8 * n) in
+        let x = Int64.unsigned_rem (Int64.shift_right_logical i (8 * n)) 256L in
         Char.chr ((Int64.to_int x) mod 256)
     in Bytes.init 8 (fun n -> w n hash)
 
@@ -39,8 +40,8 @@ let hash64_with_seed seed str =
     Hash64.reset ?seed:(Some seed) s;
     Hash64.update s str;
     let hash = Hash64.digest s in
-    Hash64.free s;
     let bytes = int64_to_bytes hash in
+    Hash64.free s;
     Hex.show @@ Hex.of_string (Bytes.to_string bytes)
 
 let hash64 str = hash64_with_seed (Int64.of_int 0) str
@@ -60,14 +61,9 @@ let build_hash_for_str hash str =
       Arg.STR ("0x" ^ (hash128 str))
   | TWOX64 ->
       Arg.STR ("0x" ^ (hash64 str))
+  | PLAIN -> Arg.STR ("0x" ^ str)
 
-let rec flat_str node =
-  match node with
-  | Arg.STR str -> str
-  | Arg.CHAR c -> Bytes.to_string @@ Bytes.init 1 (fun n -> c)
-  | Arg.ARGS ls -> List.fold_left (fun acc c -> acc ^ flat_str c) "" ls
-  | c -> raise (CommandError ("can not flat " ^ Arg.to_string c ^ " into string"))
 
 let build_hash_for_arg hash node =
-  let hash_str = flat_str node in
+  let hash_str = Arg.flat_hex node in
   build_hash_for_str hash hash_str

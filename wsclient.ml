@@ -14,6 +14,8 @@
  * limitations under the License.
  *)
 
+Printexc.record_backtrace true;;
+
 open Lwt.Infix
 open Websocket
 open Connection

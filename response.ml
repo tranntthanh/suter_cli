@@ -18,7 +18,7 @@
  * There is no good JDT implementation so far
  * We uses camlp5 to construct a dynamic parser based
  * on the Command Description File.
- * 
+ *
  * In substrate the Commands description file is
  * encoded in the metadata.
  *)
@@ -29,8 +29,8 @@ module ResponseDecoder = struct
   (*
    * After we decoded the meta from hex to string
    * we still need codec to decode the remaining stuff.
-   * 
-   * This is not good, which means the encoding of 
+   *
+   * This is not good, which means the encoding of
    * substrate rpc methods is binded with a non-standard
    * encoder.
    *)
@@ -49,12 +49,15 @@ module ResponseDecoder = struct
       try
         let result = json |> Util.member "result" in
         Command.Arg.of_json result
-      with Not_found -> begin
+      with
+      | Not_found -> begin
         try
           let error = json |> Util.member "error" in
           raise @@ InvalidResponse (Yojson.Basic.to_string error)
-        with _ -> 
-          raise @@ InvalidResponse "result is a not string"
-      end
+        with _ ->
+          raise @@ InvalidResponse ("result "^ str ^ "is a not string")
+        end
+      | Command.DecodeArgError _ ->
+          raise @@ InvalidResponse ("result "^ str ^ "is a not string")
 end
 

@@ -28,6 +28,7 @@ type ast =
   | CHECK of tname * vname
   | HASH of (hash_type * Arg.t)
   | CRYPTO of (crypto_type * Arg.t)
+  | SIGN of (crypto_type * Arg.t * Arg.t)
   | DISPLAY of tname
   | SEND of tname * Arg.t
   | CALL of cname * (Arg.t list)

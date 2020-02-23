@@ -61,7 +61,11 @@ module ExecuteClosure = struct
       Lwt.return @@ Some (build_hash_for_arg hash arg)
     | CRYPTO (crypto, arg) ->
       let arg = Arg.flat_node !closure arg in
-      Lwt.return @@ Some (build_crypto_for_args crypto PUBLIC_KEY arg)
+      Lwt.return @@ Some (build_crypto_public crypto arg)
+    | SIGN (crypto, seed, arg) ->
+      let seed = Arg.flat_node !closure seed in
+      let arg = Arg.flat_node !closure arg in
+      Lwt.return @@ Some (build_crypto_sign crypto seed arg)
     | DISPLAY n ->
       let v = JSONClosure.find n !closure in
       io_printf "> %s = %s\n" n (Arg.to_string v) >>= fun _ ->
@@ -98,6 +102,9 @@ module ExecuteClosure = struct
     | _ , _ -> Lwt.return ()
 end
 
+let is_command cmd =
+    if (String.length (String.trim cmd) == 0) then false else true
+
 let execute_script_stream stream (recv, send) db cls =
   let rec react_forever env = match db with
     | None -> begin
@@ -112,8 +119,8 @@ let execute_script_stream stream (recv, send) db cls =
 	        "Got EOF. Sending a close frame." in
             send @@ Frame.close 1000
           end
-        | Some cmd -> begin
-            let%lwt _ = Lwt_log.debug ~section (cmd ^ "\n") in
+        | Some cmd when is_command cmd -> begin
+            let%lwt _ = io_printf "%s\n" (String.trim cmd) in
             let%lwt _ = try
                 let lvl, cmd = parse_arg @@ Stream.of_string cmd in
                 let remote_call = do_ipc send recv in
@@ -130,6 +137,7 @@ let execute_script_stream stream (recv, send) db cls =
             in
             react_forever env
           end
+        | _ -> react_forever env
       end
   in react_forever JSONClosure.empty
 

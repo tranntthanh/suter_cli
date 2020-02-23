@@ -31,23 +31,28 @@ let get_the_str_list node n = match node with
       ) ts
   | _ -> raise (CommandError "expect string list")
 
-let build_crypto_for_args crypto m node =
-  match m with
-  | PUBLIC_KEY -> begin
-    match node with
+let build_crypto_public crypto node =
+  match node with
+  | Arg.STR seed -> begin
+    match crypto with
+    | ED25519 -> begin
+      let pk, _ = Sign.keypair ~seed:(Hex.to_bigstring (`Hex seed)) () in
+      match Hex.of_bigstring (Sign.(to_bytes (public pk))) with
+      | `Hex str -> Arg.STR str
+      end
+    end
+  | _ -> raise (CommandError "can not get public key for non-string node")
+
+let build_crypto_sign crypto node arg =
+  let msg = Bigstring.of_string @@ Arg.flat_hex arg in
+  let msg = Hex.to_bigstring (`Hex (Bigstring.to_string msg)) in
+  match node with
     | Arg.STR seed -> begin
       match crypto with
-      | ED25519 ->
-        let pk, _ = Sign.keypair ~seed:(Hex.to_bigstring (`Hex seed)) () in
-        Arg.STR (Hex.to_string @@
-            Hex.of_bigstring (Sign.(to_bytes (public pk))))
+      | ED25519 -> begin
+        let _, sk = Sign.keypair ~seed:(Hex.to_bigstring (`Hex seed)) () in
+        match Hex.of_bigstring Sign.(detached_extended (extended sk) msg) with
+        | `Hex str -> Arg.STR str
+        end
       end
-    | _ -> raise (CommandError "can not get public key for non-string node")
-    end
-  | SIGN -> begin (*
-    let [seed, msg] = get_the_str_list node 2 in
-    let _, sk = Sign.keypair ~seed:(Hex.to_bigstring (`Hex seed)) () in
-    Arg.STR (Hex.of_bigstring Sign.(sign sk msg))
-    *)
-    assert false
-    end
+    | _ -> raise (CommandError "can not sign for non-string node")

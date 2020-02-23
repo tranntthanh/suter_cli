@@ -104,7 +104,7 @@ let with_connection
     Lwt_io.write oc @@ Buffer.contents buf in
   read_frame, write_frame
 
-type responce_handler = string -> unit Lwt.t 
+type responce_handler = string -> unit Lwt.t
 
 let standard_react send handler fr
     : 'a option Lwt.t =
@@ -153,7 +153,7 @@ let setup_connection uri =
 let do_ipc send recv cmd
   : 'a option Lwt.t =
   let react = standard_react send (fun content->
-      let%lwt _ = Lwt_io.printf "> %s\n" content in
+      let%lwt _ = Lwt_io.printf "> Received %s\n" content in
       let%lwt result = Lwt.return @@ ResponseDecoder.get_response content in
       Lwt.return (Some result)
   ) in

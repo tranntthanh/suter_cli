@@ -82,6 +82,21 @@ module Arg = struct
         (fun (n,c) -> (n, of_json c)) ls)
   | _ -> raise @@ DecodeArgError (Yojson.Basic.to_string t)
 
+  let rec flat_hex node =
+    let starts_with_0x str = try
+      String.sub str 0 2 = "0x"
+    with _ -> false in
+    match node with
+    | STR str -> if (starts_with_0x str)
+        then (String.sub str 2 (String.length str - 2))
+        else str
+    | CHAR c ->
+        let s = Bytes.to_string @@ Bytes.init 1 (fun n -> c) in
+        (match Hex.of_string s with | `Hex hexstr -> hexstr)
+    | ARGS ls -> List.fold_left (fun acc c -> acc ^ flat_hex c) "" ls
+    | _ -> raise @@ CommandError ("Can not flat " ^ to_string node ^ " to string")
+
+
 end
 
 module ArgType = struct

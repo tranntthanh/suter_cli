@@ -36,6 +36,7 @@ type ast =
   | CHECK of tname * vname
   | HASH of (hash_type * Arg.t)
   | CRYPTO of (crypto_type * Arg.t)
+  | SIGN of (crypto_type * Arg.t * Arg.t)
   | DISPLAY of tname
   | SEND of tname * Arg.t
   | CALL of cname * (Arg.t list)
@@ -65,13 +66,10 @@ EXTEND
         [ "blake256" -> BLAKE256]
       | [ "twox128" -> TWOX128]
       | [ "twox64" -> TWOX64]
+      | [ "plain" -> PLAIN]
     ];
     crypto_type: [
         [ "ed25519" -> ED25519]
-    ];
-    crypto_method: [
-        [ "sign" -> SIGN]
-      | [ "pk" -> PUBLIC_KEY]
     ];
     cmd_exp: [
       [ lvl =vname_exp; ":="; rvl=cmd_rvalue->
@@ -89,7 +87,9 @@ EXTEND
           tname=tname_exp ->
             CHECK (tname, vname)]
     | [ "@"; "crypto"; crypto=crypto_type;
-          arg=arg_exp -> CRYPTO (crypto, arg) ]
+          seed=arg_exp -> CRYPTO (crypto, seed) ]
+    | [ "@"; "sign"; crypto=crypto_type;
+          arg=arg_exp; "|>"; seed=arg_exp -> SIGN (crypto, seed, arg) ]
     | [ "@"; "hash"; hash=hash_type;
           arg=arg_exp -> HASH (hash, arg) ]
     | [ "@"; "display"; tname=tname_exp ->
