@@ -1,0 +1,11 @@
+seed := arg0
+account_id := @crypto ed25519 seed
+@display account_id
+h1 := @hash twox128 "Token"
+h2 := @hash twox128 "BalanceMap"
+h3 := @hash blake128 account_id
+h4 := @hash plain [h1, h2, h3, account_id]
+raw := @as_hex h4
+param := [raw]
+@send param |> state_getStorage
+
