@@ -1,0 +1,11 @@
+seed := "5bacce7f308254f466449ae86a138a9f6c3b78f459c302ada879f6a05648e33c"
+account_id := @crypto ed25519 seed
+@display account_id
+h1 := @hash twox128 "System"
+h2 := @hash twox128 "Account"
+h3 := @hash blake128 account_id
+h4 := @hash plain [h1, h2, h3, account_id]
+h5 := @as_hex h4
+param := [h5]
+@send param |> state_getStorage
+
