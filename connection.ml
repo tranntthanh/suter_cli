@@ -162,3 +162,10 @@ let do_ipc send recv cmd
   send @@ Frame.create ~content () >>= fun () ->
   recv () >>= fun fr -> react fr
 
+let wait_subscription send recv _ : 'a option Lwt.t =
+  let react = standard_react send (fun content->
+      let%lwt _ = Lwt_io.printf "> Received %s\n" content in
+      let%lwt result = Lwt.return @@ ResponseDecoder.get_response content in
+      Lwt.return (Some result)
+  ) in
+  recv () >>= fun fr -> react fr

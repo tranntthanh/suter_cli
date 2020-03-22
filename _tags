@@ -1,5 +1,5 @@
 true: package(websocket, lwt, lwt_log, conduit-lwt-unix, cohttp-lwt-unix,
-      lwt_ppx, hex, digestif.ocaml, tweetnacl)
+      lwt_ppx, hex, digestif.ocaml, tweetnacl, stdint)
 true: package(yojson, camlp5, camlp5.gramlib, xxhash)
 <dsl.*>: compile_extend
 <*.native>: compile_extend

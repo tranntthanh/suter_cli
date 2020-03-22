@@ -1,5 +1,5 @@
 (*
- * Copyright 2019 Suterusu project <contact@suterusu.io>
+ * Copyright 2019 Suterusu project <contact:suterusu.io>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,12 @@ open Lwt.Infix
 open Hash
 open Crypto
 open Digestif
+open Closure
+open Ast
 
 exception DSLError of string
 
 let g_dsl = Grammar.gcreate (Plexer.gmake ())
-
-let to_cname t: cname = t
-
-type vname = string
-type tname = string
-
-type ast =
-  | NOP
-  | LVAR of Arg.t
-  | CHECK of tname * vname
-  | HASH of (hash_type * Arg.t)
-  | CRYPTO of (crypto_type * Arg.t)
-  | SIGN of (crypto_type * Arg.t * Arg.t)
-  | DISPLAY of tname
-  | SEND of tname * Arg.t
-  | CALL of cname * (Arg.t list)
-
-let to_tname t: tname = t
-let to_vname t: vname = t
 
 let arg_exp = Grammar.Entry.create g_dsl "json_arg_exp"
 let cmd_exp = Grammar.Entry.create g_dsl "json_cmd_exp"
@@ -54,7 +37,7 @@ EXTEND
         -> Arg.ATTR attrs ]
       | [ str = STRING -> Arg.STR str ]
       | [ "`"; char = INT -> Arg.CHAR (Char.chr (int_of_string char)) ]
-      | [ int = INT -> Arg.INT (int_of_string int) ]
+      | [ int= INT -> Arg.INT (int_of_string int) ]
       | [ var = cname_exp -> Arg.VAR var ]
       | [ "["; args = LIST0 arg_exp SEP ","; "]" -> Arg.ARGS args ]
     ];
@@ -64,6 +47,7 @@ EXTEND
     ];
     hash_type: [
         [ "blake256" -> BLAKE256]
+      | [ "blake128" -> BLAKE128]
       | [ "twox128" -> TWOX128]
       | [ "twox64" -> TWOX64]
       | [ "plain" -> PLAIN]
@@ -92,11 +76,15 @@ EXTEND
           arg=arg_exp; "|>"; seed=arg_exp -> SIGN (crypto, seed, arg) ]
     | [ "@"; "hash"; hash=hash_type;
           arg=arg_exp -> HASH (hash, arg) ]
+    | [ "@"; "decode"; arg=arg_exp -> DECODE arg ]
+    | [ "@"; "encode"; arg=arg_exp -> ENCODE arg ]
     | [ "@"; "display"; tname=tname_exp ->
             DISPLAY tname]
     | [ "@"; "send"; node=arg_exp; "|>";
           tname=tname_exp ->
             SEND (tname, node) ]
+    | [ "@"; "subscribe" -> SUBSCRIBE ]
+    | [ "@"; "as_hex"; node=arg_exp -> AS_HEX node]
     | [ "@"; "send"; node=arg_exp; "|>";
           tname=tname_exp ->
             SEND (tname, node) ]

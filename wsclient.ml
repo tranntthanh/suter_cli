@@ -34,13 +34,24 @@ let init_command_db send recv : 'a option Lwt.t=
   (* TODO construct the formal db here *)
   Lwt.return @@ Some (dft_cdb db)
 
+type script_info = {
+  file: string option;
+  args: string list;
+}
+
 let zkp_client uri cmd_file =
 
   let open Command in
 
+  ignore @@ List.fold_left (fun c value ->
+    let name = "arg" ^ string_of_int c in
+    Closure.ExecuteClosure.set_var name (Arg.STR value);
+    c + 1
+  ) 0 cmd_file.args;
+
   let%lwt recv, send = setup_connection uri in
   let%lwt db = init_command_db send recv in
-  let%lwt in_channel = match cmd_file with
+  let%lwt in_channel = match cmd_file.file with
     | Some f -> Lwt_io.open_file Lwt_io.input f
     | _ -> Lwt.return Lwt_io.stdin in
   Rt.execute_script_stream in_channel (recv,send) db JSONClosure.empty
@@ -53,14 +64,16 @@ let apply_loglevel = function
 let () =
   let uri = ref "" in
   let cmd = ref "" in
-  let file = ref None in
+  let file = ref {file=None; args=[]} in
   let set_uri s = uri := s in
-  let set_file f = file := Some f in
+  let set_file f = file := {!file with file = Some f} in
+  let push_arg arg = file := {!file with args = !file.args @ [arg]} in
   let fetch_cmd s = cmd := s in
   let spec_args = Arg.align [
       "-loglevel", Arg.Int apply_loglevel, "1-3 Set loglevel";
       "-url", Arg.String set_uri, " ZKP reset sign process";
-      "-f", Arg.String set_file, " ZKP reset sign process";
+      "-f", Arg.String set_file, " suter script files";
+      "-args", Arg.Rest push_arg, " script args";
     ] in
   let usage_msg = "Usage: " ^ Sys.argv.(0) ^ " <options> uri\nOptions are:" in
   Arg.parse spec_args fetch_cmd usage_msg;

@@ -16,6 +16,8 @@
 
 module JSONClosure = Map.Make(String)
 
+let add_var vname c closure = JSONClosure.add vname c closure
+
 module TypesDb = Map.Make(String)
 
 (* The error type *)
@@ -27,6 +29,7 @@ type cname = string
 module Arg = struct
 
   type t =
+    | NULL
     | STR of string
     | CHAR of char
     | INT of int
@@ -36,6 +39,7 @@ module Arg = struct
     | ATTR of (string * t) list
 
   let rec to_string t = match t with
+  | NULL -> "null"
   | STR s -> "\"" ^ s ^ "\""
   | INT i -> Int.to_string i
   | BOOL b -> if b then "true" else "false"
@@ -80,6 +84,7 @@ module Arg = struct
   | `List ls -> ARGS (List.map (fun c -> of_json c) ls)
   | `Assoc ls -> ATTR (List.map
         (fun (n,c) -> (n, of_json c)) ls)
+  | `Null -> NULL
   | _ -> raise @@ DecodeArgError (Yojson.Basic.to_string t)
 
   let rec flat_hex node =
@@ -96,6 +101,11 @@ module Arg = struct
     | ARGS ls -> List.fold_left (fun acc c -> acc ^ flat_hex c) "" ls
     | _ -> raise @@ CommandError ("Can not flat " ^ to_string node ^ " to string")
 
+  let rec flat_str node =
+    match node with
+    | STR str -> str
+    | ARGS ls -> List.fold_left (fun acc c -> acc ^ flat_str c) "" ls
+    | _ -> raise @@ CommandError ("Can not flat " ^ to_string node ^ " to string")
 
 end
 

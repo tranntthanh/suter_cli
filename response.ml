@@ -46,18 +46,17 @@ module ResponseDecoder = struct
   let get_response str =
       let open Yojson.Basic in
       let json = from_string str in
-      try
-        let result = json |> Util.member "result" in
-        Command.Arg.of_json result
+      let result = try
+        json |> Util.member "result"
       with
       | Not_found -> begin
         try
           let error = json |> Util.member "error" in
           raise @@ InvalidResponse (Yojson.Basic.to_string error)
         with _ ->
-          raise @@ InvalidResponse ("result "^ str ^ "is a not string")
+          raise @@ InvalidResponse ("result "^ str ^ " does not exist, maybe an error occurred.")
         end
-      | Command.DecodeArgError _ ->
-          raise @@ InvalidResponse ("result "^ str ^ "is a not string")
+      in
+      Command.Arg.of_json result
 end
 

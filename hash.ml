@@ -23,11 +23,13 @@ module Hash64 = XXHash.XXH64
 
 type hash_type =
   | BLAKE256 (* The standard blake2b 32 *)
+  | BLAKE128 (* The standard blake2b 16 *)
   | TWOX64 (* xx hash *)
   | TWOX128 (* concate two xx hash into one *)
   | PLAIN (* plat the json into a plain hex *)
 
 module BLAKE256 = Make_BLAKE2B (struct let digest_size = 32 end)
+module BLAKE128 = Make_BLAKE2B (struct let digest_size = 16 end)
 
 let int64_to_bytes hash =
     let w n i =
@@ -56,12 +58,15 @@ let build_hash_for_str hash str =
   match hash with
   | BLAKE256 ->
       let h = BLAKE256.digest_string str in
-      Arg.STR ("0x" ^ (BLAKE256.to_hex h))
+      Arg.STR (BLAKE256.to_hex h)
+  | BLAKE128->
+      let h = BLAKE128.digest_bytes (Hex.to_bytes (`Hex str)) in
+      Arg.STR (BLAKE128.to_hex h)
   | TWOX128 ->
-      Arg.STR ("0x" ^ (hash128 str))
+      Arg.STR (hash128 str)
   | TWOX64 ->
-      Arg.STR ("0x" ^ (hash64 str))
-  | PLAIN -> Arg.STR ("0x" ^ str)
+      Arg.STR (hash64 str)
+  | PLAIN -> Arg.STR str
 
 
 let build_hash_for_arg hash node =
