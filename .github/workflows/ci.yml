@@ -1,0 +1,38 @@
+name: build suter_cli
+on:
+  push:
+    branches:
+      - master
+      - ci
+
+jobs:
+  build_suter_cli_and_docker_image:
+    name: build suter_cli and docker image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build and tag image
+      run: docker build -t "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest" .
+
+    - name: Make docker image slimmer
+      run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/build" --workdir /build dslim/docker-slim:1.28.1 build --http-probe=false "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest"
+
+    - name: Log into github docker registry
+      run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+    - name: Publish to suter_cli docker.pkg.github.com
+      run: docker push "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest"
+
+    - name: Publish slim version of suter_cli to docker.pkg.github.com
+      run: docker push "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli.slim:latest"
+
+    - name: Copy out the newly built suter_cli
+      run: docker run -v $PWD:/opt/mount --rm --entrypoint cp "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest" /usr/local/bin/suter_cli /opt/mount/suter_cli
+
+    - uses: actions/upload-artifact@v1
+      with:
+        name: suter_cli_${{ github.sha }}
+        path: suter_cli

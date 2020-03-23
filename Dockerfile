@@ -1,9 +1,9 @@
 FROM ocaml/opam2 as builder
-COPY . /home/opam/build
+COPY --chown=opam . /home/opam/build
 WORKDIR /home/opam/build
-RUN eval "$(opam env)" && make deps && make
+RUN make all
 
-FROM phusion/baseimage:0.11
-COPY --from=builder /home/opam/build/wsclient.native /usr/local/bin/suter_cli
-RUN apt update && apt install -y xxhash libgmp10
+FROM debian:latest
+COPY --from=builder --chown=root /home/opam/build/wsclient.native /usr/local/bin/suter_cli
+RUN apt-get update && apt-get install -y libxxhash0 libgmp10
 CMD ["suter_cli"]
