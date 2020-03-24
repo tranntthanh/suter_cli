@@ -28,8 +28,9 @@ The runtime only supports linear execution at the moment.
 ## Before compilation. 
 $ Install opam 2.0.5
 $ with ocaml into a version >= 4.7.0
+The `libxxhash`, `libgmp` are also needed. For debian 10, you can run the following command.
+$ suter_cli > sudo apt-get install -y xxhash libxxhash-dev libgmp10 libgmp-dev m4 pkg-config opam
 ## Compile Suter Client
-$ suter_cli > ./configure.sh
 $ suter_cli > make
 ## Run Suter Client in command mode
 $ start your substrate node which listens localhost:9944
