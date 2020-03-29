@@ -8,4 +8,3 @@ h4 := @hash plain [h1, h2, h3, account_id]
 h5 := @as_hex h4
 param := [h5]
 @send param |> state_getStorage
-

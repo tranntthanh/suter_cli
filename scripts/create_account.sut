@@ -1,0 +1,35 @@
+seed := arg0
+nonce := arg1
+amount := arg2
+pubkey := arg3
+rel := arg4
+to := arg5
+
+account_id := @crypto ed25519 seed
+@display account_id
+blockhash := @send [] |> chain_getBlockHash
+@display blockhash
+
+nonce_codec := @encode nonce
+extra := [`0, nonce_codec, `0]
+@display extra
+
+payload := @hash plain [[`41, `1, `7, `2, `168, `0, `0, `0, `4, `0, `0, `0], blockhash]
+signature := @sign ed25519 payload |> seed
+signed_payload := @hash blake256 signature
+
+calltoken := [`6, `4]
+
+args := [amount, pubkey, rel, to]
+@display args
+
+mod := "0x84"
+
+raw_data := @hash plain [mod, account_id, "0000", signature, extra, calltoken, args]
+
+extrinsic_raw := @encode raw_data
+@display extrinsic_raw
+
+extrinsic_hex := @as_hex extrinsic_raw
+command := [extrinsic_hex]
+@send command |> author_submitExtrinsic

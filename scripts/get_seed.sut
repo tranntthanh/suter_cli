@@ -1,0 +1,6 @@
+secret := arg0
+seed := @hash blake256 secret
+@display seed
+
+account_id := @crypto ed25519 seed
+@display account_id
