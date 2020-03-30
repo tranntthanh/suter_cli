@@ -22,6 +22,7 @@ open Crypto
 open Digestif
 open Closure
 open Ast
+open Encode
 
 exception DSLError of string
 
@@ -55,6 +56,10 @@ EXTEND
     crypto_type: [
         [ "ed25519" -> ED25519]
     ];
+    encode_type: [
+        [ "compact" -> COMPACT]
+      | [ "u128" -> U128]
+    ];
     cmd_exp: [
       [ lvl =vname_exp; ":="; rvl=cmd_rvalue->
             (Some (to_vname lvl), rvl) ]
@@ -77,7 +82,8 @@ EXTEND
     | [ "@"; "hash"; hash=hash_type;
           arg=arg_exp -> HASH (hash, arg) ]
     | [ "@"; "decode"; arg=arg_exp -> DECODE arg ]
-    | [ "@"; "encode"; arg=arg_exp -> ENCODE arg ]
+    | [ "@"; "encode"; encoder=encode_type;
+          arg=arg_exp -> ENCODE (encoder, arg) ]
     | [ "@"; "display"; tname=tname_exp ->
             DISPLAY tname]
     | [ "@"; "send"; node=arg_exp; "|>";

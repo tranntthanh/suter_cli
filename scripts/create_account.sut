@@ -1,16 +1,17 @@
-seed := arg0
+secret := arg0
 nonce := arg1
 amount := arg2
 pubkey := arg3
 rel := arg4
 to := arg5
 
+seed := @hash blake256 secret
 account_id := @crypto ed25519 seed
 @display account_id
 blockhash := @send [] |> chain_getBlockHash
 @display blockhash
 
-nonce_codec := @encode nonce
+nonce_codec := @encode compact nonce
 extra := [`0, nonce_codec, `0]
 @display extra
 
@@ -27,7 +28,7 @@ mod := "0x84"
 
 raw_data := @hash plain [mod, account_id, "0000", signature, extra, calltoken, args]
 
-extrinsic_raw := @encode raw_data
+extrinsic_raw := @encode compact raw_data
 @display extrinsic_raw
 
 extrinsic_hex := @as_hex extrinsic_raw

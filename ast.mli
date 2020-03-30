@@ -1,6 +1,7 @@
 open Command
 open Hash
 open Crypto
+open Encode
 
 type vname = string
 type tname = string
@@ -12,7 +13,7 @@ type ast =
   | HASH of (hash_type * Arg.t)
   | CRYPTO of (crypto_type * Arg.t)
   | DECODE of (Arg.t)
-  | ENCODE of (Arg.t)
+  | ENCODE of (encode_type * Arg.t)
   | AS_HEX of (Arg.t)
   | SIGN of (crypto_type * Arg.t * Arg.t)
   | DISPLAY of tname

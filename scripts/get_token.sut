@@ -1,4 +1,5 @@
-seed := arg0
+secret := arg0
+seed := @hash blake256 secret
 account_id := @crypto ed25519 seed
 @display account_id
 h1 := @hash twox128 "Token"

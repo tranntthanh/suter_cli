@@ -51,9 +51,9 @@ module ExecuteClosure = struct
       let arg = Arg.flat_hex arg in
       let arg_str = Hex.to_string (`Hex arg) in
       Lwt.return @@ Some (Arg.STR arg_str)
-    | ENCODE (arg) ->
+    | ENCODE (t, arg) ->
       let arg = Arg.flat_node !closure arg in
-      Lwt.return @@ Encode.encode_compact_hex arg
+      Lwt.return @@ Encode.encode t arg
     | AS_HEX (arg) ->
       let arg = Arg.flat_node !closure arg in
       Lwt.return @@ Some (Arg.STR ("0x" ^ Arg.flat_str arg))

@@ -2,6 +2,10 @@ open Command
 open Stdint
 open Console
 
+type encode_type =
+  | COMPACT
+  | U128
+
 let u128_to_bytes u =
     let rec encode v =
       if v = (Uint128.of_int 0) then Bytes.empty
@@ -13,6 +17,12 @@ let u128_to_bytes u =
         Bytes.cat b bs
     in
     encode u
+
+let u128_to_full_bytes u =
+    let w n i =
+        let x = Uint128.rem (Uint128.shift_right_logical i (8 * n)) (Uint128.of_int 256) in
+        Char.chr ((Uint128.to_int x) mod 256)
+    in Bytes.init 16 (fun n -> w n u)
 
 let encode_compact u =
   let remain = Uint128.shift_right_logical u 6 in
@@ -45,6 +55,21 @@ let encode_compact u =
   in match Hex.of_string (Bytes.to_string bytes) with
   | `Hex hexstr -> hexstr
 
+let encode_u128_hex v =
+  match v with
+  | Arg.STR str ->
+    let hex =
+      try
+        if (String.sub str 0 2 = "0x") then
+          let i = int_of_string str in
+          let bytes = u128_to_full_bytes (Uint128.of_int i) in
+          match Hex.of_string (Bytes.to_string bytes) with | `Hex hexstr -> hexstr
+        else raise Not_found
+      with _ -> raise @@ CommandError ("Encode Compact Error: not a valid hex")
+      in
+    Some (Arg.STR hex)
+  | _ -> raise @@ CommandError ("Encode Compact Error: not a valid hex")
+
 let encode_compact_hex v =
   match v with
   | Arg.INT i ->
@@ -64,3 +89,7 @@ let encode_compact_hex v =
       in
     Some (Arg.STR hex)
   | _ -> raise @@ CommandError ("Encode Compact Error: not an integer")
+
+let encode t v = match t with
+  | COMPACT -> encode_compact_hex v
+  | U128 -> encode_u128_hex v

@@ -7,7 +7,7 @@ account_id := @crypto ed25519 seed
 blockhash := @send [] |> chain_getBlockHash
 @display blockhash
 
-nonce_codec := @encode nonce
+nonce_codec := @encode compact nonce
 extra := [`0, nonce_codec, `0]
 @display extra
 
@@ -22,7 +22,7 @@ mod := "84"
 raw_data := @hash plain [mod, account_id, "0000", signature, extra, calltoken, args]
 @display raw_data
 
-extrinsic_raw := @encode raw_data
+extrinsic_raw := @encode compact raw_data
 @display extrinsic_raw
 
 extrinsic_hex := @as_hex extrinsic_raw

@@ -1,1 +1,5 @@
-./wsclient.native -url http://127.0.0.1:9944 -f scripts/transfer_token.sut -args "5bacce7f308254f466449ae86a138a9f6c3b78f459c302ada879f6a05648e33c" "0x1" "0x10000000000000000000000000000000" "10cc6c4b0ce74d849bf797dd8d4ee6f973c09be7e696fb268a72a06992d12e6a"
+read -p "Please specify your secret sentence for your account: (eg: fox smile) >> " ACCOUNT_SECRET
+read -p "Please specify target account id: (256 bytes hex) >> " TARGET_ACCOUNT
+read -p "Your nonce ?: (eg: 0x00) >> " NONCE
+read -p "Transfer Amount ?: (eg: 0x10000000000000000000000000000000, must be u128 little-end encoded) >> " AMOUNT
+./wsclient.native -url http://127.0.0.1:9944 -f scripts/transfer_token.sut -args "$ACCOUNT_SECRET" "$NONCE" "$AMOUNT" "$TARGET_ACCOUNT"

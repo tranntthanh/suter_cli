@@ -1,1 +1,2 @@
-./wsclient.native -url http://127.0.0.1:9944 -f scripts/reset_account.sut -args "5bacce7f308254f466449ae86a138a9f6c3b78f459c302ada879f6a05648e33c" "0x0" "0x10000000000000000000000000000000"  "0x12340000000000000000000000000000" "0xabc40000000000000000000000000000"
+read -p "Please specify your secret sentence for your account: (eg: fox smile) >> " ACCOUNT_SECRET
+./wsclient.native -url http://127.0.0.1:9944 -f scripts/reset_account.sut -args "$ACCOUNT_SECRET" "0x0" "0x10000000000000000000000000000000"  "0x12340000000000000000000000000000" "0xabc40000000000000000000000000000"
