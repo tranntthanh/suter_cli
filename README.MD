@@ -50,6 +50,8 @@ You will have two ways to execute the Client DSL.
 
 a. You can uses wsclient to open an interactive executor.
 
+Start the client with `wsclient.native` or `docker run -it suterusu/suter-cli`.
+
 ```
 > wsclient.native -url http:127.0.0.1  
 ```

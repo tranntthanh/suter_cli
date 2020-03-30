@@ -1,4 +1,4 @@
-name: build suter_cli
+name: build package
 on:
   push:
     branches:
@@ -6,33 +6,66 @@ on:
       - ci
 
 jobs:
-  build_suter_cli_and_docker_image:
-    name: build suter_cli and docker image
+  build_package_and_docker_image:
+    name: build package and docker image
     runs-on: ubuntu-latest
     steps:
+    - name: Set up environment variables
+      shell: bash
+      run: |
+        DOCKER_TAG="latest"
+        PACKAGE_NAME="suter-cli"
+        DOCKER_HUB_USERNAME=suterusu
+        GITHUB_DOCKER_REGISTRY_URL="docker.pkg.github.com/$GITHUB_REPOSITORY/$PACKAGE_NAME"
+        [[ -z "$PACKAGE_NAME" ]] && PACKAGE_NAME="$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}' | sed -e "s/:refs//")"
+        echo ::set-env "name=PACKAGE_NAME::$PACKAGE_NAME"
+        echo ::set-env "name=GITHUB_DOCKER_REGISTRY_URL::$GITHUB_DOCKER_REGISTRY_URL"
+        echo ::set-env "name=DOCKER_TAG::$DOCKER_TAG"
+        [[ -z $DOCKER_HUB_USERNAME ]] && exit
+        DOCKER_HUB_URL="$DOCKER_HUB_USERNAME/$PACKAGE_NAME"
+        echo ::set-env "name=DOCKER_HUB_USERNAME::$DOCKER_HUB_USERNAME"
+        echo ::set-env "name=DOCKER_HUB_URL::$DOCKER_HUB_URL"
+
     - uses: actions/checkout@v2
 
     - name: Build and tag image
-      run: docker build -t "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest" .
+      run: docker build -t "$PACKAGE_NAME:$DOCKER_TAG" .
 
     - name: Make docker image slimmer
-      run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/build" --workdir /build dslim/docker-slim:1.28.1 build --http-probe=false "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest"
+      run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/build" --workdir /build dslim/docker-slim:1.28.1 build --http-probe=false "$PACKAGE_NAME:$DOCKER_TAG"
 
-    - name: Log into github docker registry
-      run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+    - name: Tag docker image
+      run: |
+        docker tag "$PACKAGE_NAME:$DOCKER_TAG" "$GITHUB_DOCKER_REGISTRY_URL:$DOCKER_TAG"
+        docker tag "$PACKAGE_NAME.slim:$DOCKER_TAG" "$GITHUB_DOCKER_REGISTRY_URL.slim:$DOCKER_TAG"
+        [[ -z $DOCKER_HUB_URL ]] && exit
+        docker tag "$PACKAGE_NAME:$DOCKER_TAG" "$DOCKER_HUB_URL:$DOCKER_TAG"
+        docker tag "$PACKAGE_NAME.slim:$DOCKER_TAG" "$DOCKER_HUB_URL.slim:$DOCKER_TAG"
+
+    - name: Publish to package hub.docker.com
+      shell: bash
+      run: |
+        if [[ -z $DOCKER_HUB_USERNAME ]] || [[ -z $DOCKER_HUB_TOKEN ]]; then exit; fi
+        echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+        docker push "$DOCKER_HUB_URL.slim:$DOCKER_TAG"
+        docker push "$DOCKER_HUB_URL:$DOCKER_TAG"
+        docker logout
+      env:
+        DOCKER_HUB_TOKEN: ${{secrets.DOCKER_HUB_TOKEN}}
+
+    - name: Publish to package docker.pkg.github.com
+      run: |
+        echo $GITHUB_TOKEN | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+        docker push "$GITHUB_DOCKER_REGISTRY_URL.slim:$DOCKER_TAG"
+        docker push "$GITHUB_DOCKER_REGISTRY_URL:$DOCKER_TAG"
+        docker logout
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-    - name: Publish to suter_cli docker.pkg.github.com
-      run: docker push "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest"
-
-    - name: Publish slim version of suter_cli to docker.pkg.github.com
-      run: docker push "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli.slim:latest"
-
-    - name: Copy out the newly built suter_cli
-      run: docker run -v $PWD:/opt/mount --rm --entrypoint cp "docker.pkg.github.com/$GITHUB_REPOSITORY/suter_cli:latest" /usr/local/bin/suter_cli /opt/mount/suter_cli
+    - name: Copy out the newly built package
+      run: docker run -v "$PWD:/opt/mount" --rm --entrypoint cp "$PACKAGE_NAME:$DOCKER_TAG" "/usr/local/bin/$PACKAGE_NAME" "/opt/mount/$PACKAGE_NAME"
 
     - uses: actions/upload-artifact@v1
       with:
-        name: suter_cli_${{ github.sha }}
-        path: suter_cli
+        name: ${{ env.PACKAGE_NAME }}_${{ github.sha }}
+        path: ${{ env.PACKAGE_NAME }}
