@@ -1,8 +1,9 @@
-seed := arg0
+secret := arg0
 nonce := arg1
 amount := arg2
 to := arg3
 
+seed := @hash blake256 secret
 account_id := @crypto ed25519 seed
 @display account_id
 blockhash := @send [] |> chain_getBlockHash
@@ -18,7 +19,8 @@ signed_payload := @hash blake256 signature
 
 calltoken := [`6, `0]
 
-args := [amount, to]
+amount_u128 := @encode u128 amount
+args := [amount_u128, to]
 @display args
 
 mod := "0x84"
