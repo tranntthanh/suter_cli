@@ -47,7 +47,7 @@ jobs:
         docker tag "$PACKAGE_NAME.slim:latest" "$DOCKER_HUB_URL.slim:latest"
 
     - name: Publish to package hub.docker.com
-      shell: bash
+      continue-on-error: True
       run: |
         if [[ -z $DOCKER_HUB_USERNAME ]] || [[ -z $DOCKER_HUB_TOKEN ]]; then exit; fi
         echo $DOCKER_HUB_TOKEN | docker login -u $DOCKER_HUB_USERNAME --password-stdin
@@ -60,6 +60,7 @@ jobs:
         DOCKER_HUB_TOKEN: ${{secrets.DOCKER_HUB_TOKEN}}
 
     - name: Publish to package docker.pkg.github.com
+      continue-on-error: True
       run: |
         echo $GITHUB_TOKEN | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
         docker push "$GITHUB_DOCKER_REGISTRY_URL:$DOCKER_TAG"
