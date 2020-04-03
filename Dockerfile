@@ -5,5 +5,5 @@ RUN make all
 
 FROM debian:latest
 COPY --from=builder --chown=root /home/opam/build/wsclient.native /usr/local/bin/suter-cli
-RUN apt-get update && apt-get install -y libxxhash0 libgmp10
+RUN apt-get update && apt-get install -y libxxhash0 libgmp10 netbase
 ENTRYPOINT ["suter-cli"]
