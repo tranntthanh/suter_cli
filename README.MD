@@ -34,7 +34,8 @@ $ suter_cli > sudo apt-get install -y xxhash libxxhash-dev libgmp10 libgmp-dev m
 $ suter_cli > make
 ## Run Suter Client in command mode
 $ start your substrate node which listens localhost:9944
-$ suter_cli > ./wsclient.native -url http://127.0.0.1:9944
+$ suter_cli > ./wsclient.native -url http://127.0.0.1:9944 
+
 
 # Component details:
 
@@ -54,6 +55,10 @@ Start the client with `wsclient.native` or `docker run -it suterusu/suter-cli`.
 
 ```
 > wsclient.native -url http:127.0.0.1  
+```
+We have some nodes running in the cloud, you can also connect to those directly
+```
+> wsclient.native -url https://alice.cluster.suterusu.io 
 ```
 
 In the interactive executor, you can typing and executing commands like the following:
