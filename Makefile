@@ -1,5 +1,13 @@
-wsclient.native: wsclient.ml command.ml connection.ml dsl.ml rt.ml response.ml hash.ml crypto.ml encode.ml
-	opam config exec -- ocamlbuild -tags thread -use-ocamlfind wsclient.native
+OCB_FLAGS = -use-ocamlfind -tags thread -tags bin_annot
+OCB_STATIC_FLAGS = -tags 'cclib(-static)'
+OCB = opam config exec -- ocamlbuild
+SRC_FILES = wsclient.ml command.ml connection.ml dsl.ml rt.ml response.ml hash.ml crypto.ml encode.ml
+
+wsclient.native: $(SRC_FILES)
+	$(OCB) $(OCB_FLAGS) wsclient.native
+
+static-wsclient.native: $(SRC_FILES)
+	$(OCB) $(OCB_FLAGS) $(OCB_STATIC_FLAGS) wsclient.native
 
 external-deps:
 	sudo apt-get update || true
@@ -12,5 +20,7 @@ deps: external-deps
 
 all: deps wsclient.native
 
+static-all: deps static-wsclient.native
+
 clean:
-	opam config exec -- ocamlbuild -clean
+	$(OCB) -clean
