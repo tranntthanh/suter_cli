@@ -11,6 +11,6 @@ COPY --chown=opam . /home/opam/build
 WORKDIR /home/opam/build
 RUN make static-all
 
-FROM apline:latest
+FROM alpine:3
 COPY --from=builder --chown=root /home/opam/build/wsclient.native /usr/local/bin/suter-cli
 ENTRYPOINT ["suter-cli"]
