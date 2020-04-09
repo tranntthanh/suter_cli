@@ -27,11 +27,11 @@ let u128_to_full_bytes u =
 let encode_compact u =
   let remain = Uint128.shift_right_logical u 6 in
   let least = (Uint128.to_int (Uint128.shift_left u 2)) mod 256 in
-  io_printf "> encoding %s, remaining is %s, least is %d\n> "
+  (* io_printf "> encoding %s, remaining is %s, least is %d\n> "
         (string_of_int (Uint128.to_int u))
         (string_of_int (Uint128.to_int remain))
         least
-  ;
+  ;*)
   let bytes =
     if remain = (Uint128.of_int 0) then Bytes.init 1 (fun _ -> Char.chr least)
     else begin
@@ -84,7 +84,7 @@ let encode_compact_hex v =
         else raise Not_found
       with _ ->
         let i = String.length str in
-        io_printf "> encoding length is %d\n> " i;
+        ignore @@ io_printf "> encoding length is %d\n> " i;
         encode_compact (Uint128.of_int (i / 2)) ^ str
       in
     Some (Arg.STR hex)

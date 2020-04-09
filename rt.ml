@@ -57,7 +57,8 @@ let execute_script_stream stream (recv, send) db cls =
             | TypingError (t,a) ->
                 io_printf "> Command Typing Error: %s is expected to have type %s\n> "
                 (Arg.to_string a) (ArgType.to_string t)
-            | e -> ExecuteClosure.display_all_vars (); raise e
+            | e -> ignore @@ io_printf "> Unexpected exception!!! dump all vars:\n";
+                ExecuteClosure.display_all_vars (); raise e
             in
             react_forever env
           end

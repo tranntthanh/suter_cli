@@ -26,7 +26,7 @@ module ExecuteClosure = struct
 
   let display_all_vars _  =
     ignore @@ JSONClosure.mapi (fun n arg ->
-      io_printf "> %s = %s" n (Arg.to_string arg)
+      io_printf "> %s = %s\n" n (Arg.to_string arg)
     ) !closure
 
   (*
